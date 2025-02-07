@@ -233,43 +233,26 @@ def main():
             questions = extract_questions_from_docx(doc)
             
             if questions:
-                # 添加保存方式选择
-                save_method = st.radio(
-                    "选择保存方式：",
-                    ["直接下载", "指定保存位置"]
+                # 文件名输入框
+                save_filename = st.text_input(
+                    "输入保存的文件名（不需要添加.xlsx后缀）：",
+                    value="转换结果",
+                    key="filename_input"  # 添加唯一的key
                 )
                 
-                save_filename = st.text_input("文件名（不需要.xlsx后缀）：", value="转换结果")
+                # 创建Excel文件的字节流
+                excel_buffer = io.BytesIO()
+                write_to_excel(questions, excel_buffer)
+                excel_buffer.seek(0)
                 
-                if save_method == "直接下载":
-                    # 创建Excel文件的字节流
-                    excel_buffer = io.BytesIO()
-                    wb = Workbook()
-                    write_to_excel(questions, excel_buffer)
-                    excel_buffer.seek(0)
-                    
-                    # 添加下载按钮
-                    st.download_button(
-                        label="下载Excel文件",
-                        data=excel_buffer,
-                        file_name=f"{save_filename}.xlsx",
-                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                    )
-                    
-                else:
-                    # 手动指定保存位置
-                    save_path = st.text_input("保存路径（如：D:\\Documents）：", value="")
-                    if save_path:
-                        # 使用 os.path.join 构建文件路径
-                        full_path = os.path.join(save_path, f"{save_filename}.xlsx")
-                        
-                        if st.button("保存Excel文件"):
-                            try:
-                                os.makedirs(os.path.dirname(full_path), exist_ok=True)
-                                write_to_excel(questions, full_path)
-                                st.success(f"文件已成功保存至：{full_path}")
-                            except Exception as e:
-                                st.error(f"保存文件时出错：{str(e)}")
+                # 使用用户输入的文件名创建下载按钮
+                st.download_button(
+                    label=f"下载Excel文件：{save_filename}.xlsx",
+                    data=excel_buffer,
+                    file_name=f"{save_filename}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    key="download_button"  # 添加唯一的key
+                )
                 
                 # 显示转换结果预览
                 st.subheader("转换结果预览")
