@@ -60,8 +60,8 @@ def extract_questions_from_docx(doc):
             current_question['question'] = question_text.strip()
             
         # 处理选项（A-D开头的行）- 修改以适应带点号的格式
-        elif re.match(r'^[A-D]\.?\s', text):  # 添加可选的点号
-            option_text = re.sub(r'^[A-D]\.?\s', '', text).strip()  # 移除选项标记和可能的点号
+        elif re.match(r'^[A-J]\.?\s', text):  # 添加可选的点号
+            option_text = re.sub(r'^[A-J]\.?\s', '', text).strip()  # 移除选项标记和可能的点号
             current_question['options'].append(option_text)
     
     # 保存最后一题
@@ -101,17 +101,14 @@ def write_to_excel(questions, output):
     ws = wb.active
     current_row = 1
     
-    # 获取所有选项字母（修改为支持更多选项）
+    # 获取所有选项字母
+        # 获取所有选项字母（修改为支持更多选项）
     def get_option_letters(questions):
         max_options = 0
         for q in questions:
-            # 获取选项数量和答案中的最大字母
-            option_count = len(q['options'])
-            answer_max = max([ord(c) - ord('A') for c in q['answer'] if c.isalpha()], default=-1) + 1
-            max_options = max(max_options, option_count, answer_max)
-        
-        # 生成所有需要的选项字母
-        return [chr(65 + i) for i in range(max_options)]
+            max_options = max(max_options, len(q['options']))
+        return [chr(65 + i) for i in range(max_options)]  # 根据实际选项数量生成字母
+
     
     # 动态生成表头
     def get_headers(question_type, option_letters):
@@ -148,7 +145,7 @@ def write_to_excel(questions, output):
         if question_type in ['单选题', '多选题']:
             # 动态处理选择题选项
             for i, option in enumerate(q['options']):
-                col_index = headers.index(option) + 1
+                col_index = headers.index(chr(65 + i)) + 1
                 ws.cell(row=current_row, column=col_index, value=option)
             ws.cell(row=current_row, column=len(headers), value=q['answer'])
             
@@ -264,21 +261,8 @@ def main():
                     st.write(f"题目：{q['question']}")
                     if q['options']:
                         st.write("选项：")
-                        # 确保显示所有选项
-                        answer_letters = set(c for c in q['answer'] if c.isalpha())
-                        max_option_index = max(
-                            len(q['options']) - 1,
-                            max((ord(c) - ord('A') for c in answer_letters), default=0)
-                        )
-                        
-                        # 显示现有选项
                         for j, opt in enumerate(q['options']):
                             st.write(f"{chr(65+j)}. {opt}")
-                        
-                        # 如果答案中包含的选项比实际选项多，添加空选项
-                        for j in range(len(q['options']), max_option_index + 1):
-                            st.write(f"{chr(65+j)}. [空选项]")
-                            
                     st.write(f"答案：{q['answer']}")
                     st.write("---")
                 
