@@ -115,10 +115,8 @@ def write_to_excel(questions, output):
         common_headers = ['题型', '题目']
         if question_type in ['单选题', '多选题']:
             return common_headers + option_letters + ['答案']
-        elif question_type == '判断题':
-            return common_headers + ['正确', '错误', '答案']
-        else:
-            return common_headers + ['答案']
+        else:  # 判断题和其他题型
+            return common_headers + option_letters + ['答案']  # 保持与选择题相同的结构
     
     # 确定所有可能的选项字母
     option_letters = get_option_letters(questions)
@@ -150,14 +148,8 @@ def write_to_excel(questions, output):
             ws.cell(row=current_row, column=len(headers), value=q['answer'])
             
         elif question_type == '判断题':
-            # 处理判断题选项
-            ws.cell(row=current_row, column=3, value='正确')
-            ws.cell(row=current_row, column=4, value='错误')
-            ws.cell(row=current_row, column=5, value=q['answer'])
-            
-        else:
-            # 其他题型只记录答案
-            ws.cell(row=current_row, column=3, value=q['answer'])
+            # 将答案写入最后一列（与选择题保持一致）
+            ws.cell(row=current_row, column=len(headers), value=q['answer'])
         
         current_row += 1
     
