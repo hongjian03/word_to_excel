@@ -101,13 +101,17 @@ def write_to_excel(questions, output):
     ws = wb.active
     current_row = 1
     
-    # 获取所有选项字母
+    # 获取所有选项字母（修改为支持更多选项）
     def get_option_letters(questions):
-        letters = set()
+        max_options = 0
         for q in questions:
-            for i, _ in enumerate(q['options']):
-                letters.add(chr(65 + i))  # 将数字转换为对应的字母(A=65, B=66, ...)
-        return sorted(list(letters))
+            # 获取选项数量和答案中的最大字母
+            option_count = len(q['options'])
+            answer_max = max([ord(c) - ord('A') for c in q['answer'] if c.isalpha()], default=-1) + 1
+            max_options = max(max_options, option_count, answer_max)
+        
+        # 生成所有需要的选项字母
+        return [chr(65 + i) for i in range(max_options)]
     
     # 动态生成表头
     def get_headers(question_type, option_letters):
@@ -144,7 +148,7 @@ def write_to_excel(questions, output):
         if question_type in ['单选题', '多选题']:
             # 动态处理选择题选项
             for i, option in enumerate(q['options']):
-                col_index = headers.index(chr(65 + i)) + 1
+                col_index = headers.index(option) + 1
                 ws.cell(row=current_row, column=col_index, value=option)
             ws.cell(row=current_row, column=len(headers), value=q['answer'])
             
@@ -197,7 +201,6 @@ def main():
            - 单选题答案格式：{A}（单个选项）
         
         3. 保存文件：
-           - 输入完整的保存路径（如：D:/Documents 或 C:/Users/Username/Desktop）
            - 输入文件名（无需添加.xlsx后缀）
            - 点击"保存Excel文件"按钮完成保存
         
@@ -261,8 +264,21 @@ def main():
                     st.write(f"题目：{q['question']}")
                     if q['options']:
                         st.write("选项：")
+                        # 确保显示所有选项
+                        answer_letters = set(c for c in q['answer'] if c.isalpha())
+                        max_option_index = max(
+                            len(q['options']) - 1,
+                            max((ord(c) - ord('A') for c in answer_letters), default=0)
+                        )
+                        
+                        # 显示现有选项
                         for j, opt in enumerate(q['options']):
                             st.write(f"{chr(65+j)}. {opt}")
+                        
+                        # 如果答案中包含的选项比实际选项多，添加空选项
+                        for j in range(len(q['options']), max_option_index + 1):
+                            st.write(f"{chr(65+j)}. [空选项]")
+                            
                     st.write(f"答案：{q['answer']}")
                     st.write("---")
                 
