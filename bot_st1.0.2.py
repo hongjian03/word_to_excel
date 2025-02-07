@@ -258,9 +258,9 @@ def main():
                     
                 else:
                     # 手动指定保存位置
-                    save_path = st.text_input("保存路径（如：D:/Documents）：", value="")
+                    save_path = st.text_input("保存路径（如：D:\Documents）：", value="")
                     if save_path:
-                        full_path = f"{save_path.rstrip('/')}/{save_filename}.xlsx"
+                        full_path = f"{save_path.rstrip('\\')}/{save_filename}.xlsx"
                         
                         if st.button("保存Excel文件"):
                             try:
