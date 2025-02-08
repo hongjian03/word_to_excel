@@ -42,6 +42,9 @@ def extract_questions_from_docx(doc):
         question_match = re.match(r'^(?:#?\s*)?(\d+)(\.|\、)?\s*(.*)', text)
         if question_match:
             if current_question:  # 如果存在上一题，保存它
+                # 在添加到questions列表前确定题型
+                if not current_question.get('type') or current_question['type'] == '单选题':
+                    current_question['type'] = determine_question_type(current_question)
                 questions.append(current_question)
             
             # 获取题目内容
@@ -67,18 +70,24 @@ def extract_questions_from_docx(doc):
             option_text = re.sub(r'^[A-J](\.|\、)?', '', text).strip()
             current_question['options'].append(option_text)
     
-    # 保存最后一题
+    # 保存最后一题（同样需要确定题型）
     if current_question:
+        if not current_question.get('type') or current_question['type'] == '单选题':
+            current_question['type'] = determine_question_type(current_question)
         questions.append(current_question)
     
     return questions
 
 def determine_question_type(question):
     """根据答案和选项特征判断题型"""
+    if not question.get('answer'):
+        return '单选题'
+        
+    # 清理答案中的空格和中英文逗号，并转换为大写
     answer = question['answer'].strip().upper()
-    options = question['options']
+    answer = answer.replace(' ', '').replace('，', '').replace(',', '')
     
-    # 判断题特征：答案为"正确"/"错误"或"对"/"错"
+    # 判断题特征：答案为"正确"/"错误"或"对"/"错"或T/F
     if answer in ['正确', '错误', '对', '错', 'T', 'F']:
         return '判断题'
     
@@ -198,22 +207,21 @@ def main():
         
         ### 示例题目格式：
         ```
-        ##单选题##
         1. 这是一道单选题{A}
         A. 选项一
         B. 选项二
         C. 选项三
         D. 选项四
-        
-        ##多选题##
+
         2. 这是一道多选题{ABC}
         A. 选项一
         B. 选项二
         C. 选项三
         D. 选项四
-        
-        ##判断题##
-        3. 这是一道判断题{正确}
+
+        3. 这是一道判断题{A}
+        A. 正确
+        B. 错误
         ```
         """)
     
